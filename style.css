@@ -1,0 +1,160 @@
+body {
+    margin: 0px;
+
+    font-family: 'Inclusive Sans', sans-serif;
+    font-display: block;
+    text-align: center;
+}
+
+/* LEFT SIDEBAR */ /* LEFT SIDEBAR */ /* LEFT SIDEBAR */ /* LEFT SIDEBAR */ /* LEFT SIDEBAR */ /* LEFT SIDEBAR */ /* LEFT SIDEBAR */
+
+#left_sidebar {
+    width: 21vw;
+    height: calc(70vh - 4vw);
+
+    border: 1px solid lightgray;
+
+    position: absolute;
+    top: 2vw;
+    left: 2vw;
+}
+
+#ls_info_div {
+    width: 15vw;
+    height: 30vh;
+
+    background-color: white;
+    border: 5px solid black;
+    border-radius: 20px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* BILLS HELD MENU */ /* BILLS HELD MENU */ /* BILLS HELD MENU */ /* BILLS HELD MENU */ /* BILLS HELD MENU */ /* BILLS HELD MENU */ /* BILLS HELD MENU */
+
+#bills_div {
+    width: 47vw;
+    height: calc(30vh - 2vw);
+
+    border: 1px solid lightgray;
+    
+    position: absolute;
+    bottom: 2vw;
+    left: 2vw;
+}
+
+/* ACTION CARDS MENU */ /* ACTION CARDS MENU */ /* ACTION CARDS MENU */ /* ACTION CARDS MENU */ /* ACTION CARDS MENU */ /* ACTION CARDS MENU */
+
+#actions_div {
+    width: 47vw;
+    height: calc(30vh - 2vw);
+
+    border: 1px solid lightgray;
+
+    position: absolute;
+    bottom: 2vw;
+    right: 2vw;
+}
+
+/* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */
+
+#right_sidebar {
+    width: 21vw;
+    height: calc(70vh - 4vw);
+
+    border: 1px solid lightgray;
+
+    position: absolute;
+    top: 2vw;
+    right: 2vw;
+}
+
+/* MAIN WINDOW */ /* MAIN WINDOW */ /* MAIN WINDOW */ /* MAIN WINDOW */ /* MAIN WINDOW */ /* MAIN WINDOW */ /* MAIN WINDOW */ /* MAIN WINDOW */
+
+#main_window {
+    width: 50vw;
+    height: calc(70vh - 4vw);
+
+    border: 1px solid lightgray;
+
+    position: absolute;
+    top: 2vw;
+    left: 25vw;
+}
+
+/* HOUSE OF REPRESENTATIVES */ /* HOUSE OF REPRESENTATIVES */ /* HOUSE OF REPRESENTATIVES */ /* HOUSE OF REPRESENTATIVES */ /* HOUSE OF REPRESENTATIVES */
+
+#mw_housediv {
+    display: none;
+}
+
+#mw_housediv_title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+#mw_housediv_btns {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    height: 300px;
+    width: 300px; /* Adjust width as needed */
+    margin: auto;
+}
+
+#mw_housediv_btns button {
+    border-radius: 5px;
+    border: 2px solid black;
+    background-color: white;
+    font-size: 20px;
+}
+
+/* SENATE */ /* SENATE */ /* SENATE */ /* SENATE */ /* SENATE */ /* SENATE */ /* SENATE */ /* SENATE */ /* SENATE */ /* SENATE */ /* SENATE */ /* SENATE */
+
+#mw_senatediv {
+    display: none;
+}
+
+#mw_senatediv_title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+#mw_senatediv_btns {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    height: 240px;
+    width: 300px; /* Adjust width as needed */
+    margin: auto;
+}
+
+#mw_senatediv_btns button {
+    border-radius: 5px;
+    border: 2px solid black;
+    background-color: white;
+    font-size: 20px;
+}
+
+.far_right {
+    border: 3px solid red !important;
+}
+
+.mid_right {
+    border: 2px solid #ff66cc !important;
+}
+
+.independent {
+    border: 2px solid darkgray !important;
+}
+
+.mid_left {
+    border: 2px solid #6699ff !important;
+}
+
+.far_left {
+    border: 3px solid blue !important;
+}

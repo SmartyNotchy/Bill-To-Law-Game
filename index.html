@@ -4,22 +4,124 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <meta name="description" content="">
+    <meta name="description" content="Demonstrating the challenges of the legislative process through a video game. For an AP Gov project. ">
     <title>Bill To Law Game</title>
     
     <link href="https://fonts.googleapis.com/css?family=Inclusive+Sans" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="style.css" />
     <!-- <link rel="icon" href="images/global/favicon_light.svg" type="image/x-icon"> -->
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.0/tsparticles.bundle.min.js"></script>
   </head>
   <body>
     <main>
       <script>0</script>
+      
+      <div id="left_sidebar">
+        <div id="ls_info_div">
+          <p id="ls_info_roundnum">Round 1/30</p>
+          <p id="ls_info_cash">$0</p>
+          <p id="ls_info_support">Public Approval: x%</p>
+        </div>
+
+        <button id="ls_help_btn">Help</button>
+      </div>
+
+      <div id="bills_div">
+        <button id="bd_bill0" class="bd_bill">
+          H.R. 1
+          <br>
+          <button></button>
+        </button>
+      </div>
+
+      <div id="actions_div">
+        
+      </div>
+
+      <div id="right_sidebar">
+        <div id="rs_info_div">
+          Info
+        </div>
+      </div>
+
+      <div id="main_window">
+        <div id="mw_header">
+          <button id="mw_header_shop">Action Card Shop</button>
+          <button id="mw_header_overview">Bill Overview</button>
+          <button id="mw_header_house">House</button>
+          <button id="mw_header_senate">Senate</button>
+        </div>
+
+        <div id="mw_overviewdiv">
+          <p>TODO BILL STUFF</p>
+        </div>
+
+        <div id="mw_housediv">
+          <p id="mw_housediv_title">House of Representatives</p>
+          <div id="mw_housediv_btns">
+            <button>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>4</button>
+            <button>5</button>
+            <button>6</button>
+            <button>7</button>
+            <button>8</button>
+            <button>9</button>
+            <button>10</button>
+            <button>11</button>
+            <button>12</button>
+            <button>13</button>
+            <button>14</button>
+            <button>15</button>
+            <button>16</button>
+            <button>17</button>
+            <button>18</button>
+            <button>19</button>
+            <button>20</button>
+            <button>21</button>
+            <button>22</button>
+            <button>23</button>
+            <button>24</button>
+            <button>25</button>
+          </div>
+        </div>
+
+        <div id="mw_senatediv">
+          <p id="mw_senatediv_title">The Senate</p>
+          <div id="mw_senatediv_btns">
+            <button>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>4</button>
+            <button>5</button>
+            <button>6</button>
+            <button>7</button>
+            <button>8</button>
+            <button>9</button>
+            <button>10</button>
+            <button>11</button>
+            <button>12</button>
+            <button>13</button>
+            <button>14</button>
+            <button>15</button>
+            <button>16</button>
+            <button>17</button>
+            <button>18</button>
+            <button>19</button>
+            <button>20</button>
+          </div>
+        </div>
+      </div>
+
     </main>
 
-    <script src="scripts/confetti.js"></script>
-    <script src="scripts/helpers.js"></script>
-    <script src="scripts/directory.js"></script>
-    <script src="scripts/sessions.js"></script>
-    <script src="scripts/mainmenu.js"></script>
+    <!-- <script src="confetti.js"></script> -->
+    <script src="game.js"></script>
+    <script src="content.js"></script>
   </body>
 </html>
