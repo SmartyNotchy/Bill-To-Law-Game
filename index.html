@@ -27,7 +27,7 @@
           <p id="ls_info_approval">Public Approval: x%</p>
         </div>
 
-        <button id="ls_help_btn">Help</button>
+        <button id="ls_nextround_btn">Next Round</button>
       </div>
 
       <div id="bills_div">
@@ -35,17 +35,6 @@
 
       <div id="actions_div">
         <div id="ad_cards">
-          <button class="ad_card">
-            <p class="ad_card_title">Debug</p>
-            <p class="ad_card_desc">Does Debug Stuff</p>
-          </button>
-          <button class="ad_card">
-            <p class="ad_card_title">Debug</p>
-            <p class="ad_card_desc">Does Debug Stuff</p>
-          </button><button class="ad_card">
-            <p class="ad_card_title">Debug</p>
-            <p class="ad_card_desc">Does Debug Stuff</p>
-          </button>
         </div>
 
         <div id="ad_btns">
@@ -59,11 +48,11 @@
           <p id="rs_co_house">House of Representatives</p>
 
           <hr>
-          <p id="rs_cm_name">Bill Overview</p>
-          <p id="rs_cm_name">Support: </p>
+          <p id="rs_co_name">Bill Overview</p>
+          <p id="rs_co_support">Support: </p>
           <hr>
 
-          <button id="rs_cm_vote">Hold Vote on Bill</button>
+          <button id="rs_co_vote">Hold Vote on Bill</button>
         </div>
 
 
@@ -78,10 +67,7 @@
           <p id="rs_cm_vote">Will vote <span id="rs_cm_votetext">NO (-5%)</span> on <span id="rs_cm_votebill">H.R. 1</span></p>
           <br>
           <p id="rs_cm_inftitle">Voting Influences:</p>
-
-          <div id="rs_cm_infdiv">
-
-          </div>
+          <p id="rs_cm_inf"></p>
         </div>
 
         <div id="rs_shop_div">
@@ -91,6 +77,18 @@
           Buy action cards and bill proposals in the shop!
           <br>
           You can only have 3 active bills and hold 3 active cards at any given time.
+        </div>
+
+        <div id="rs_overview_div">
+          <br>
+          Bill Overview
+          <hr>
+
+          <p id="rs_od_alignment">Bipartisan</p>
+          <p id="rs_od_popsupport">Popular Support: 0%</p>
+          <p id="rs_od_reward">Reward: $0</p>
+          <br>
+          <p id="rs_od_desc">This is the placeholder bill description.</p>
         </div>
       </div>
 
@@ -103,107 +101,34 @@
         </div>
       
         <div id="mw_overviewdiv">
-          TODO: OVERVIEW
+          <br>
+          <br>
+          <p id="mw_od_title">Bill Overview - ____</p>
+          <p id="mw_od_desc">Your bill is currently stuck in Committee. It will move to the house floor in 2 turns.</p>
+          <br>
+          <hr>
+          <br>
+          <p id="mw_od_amnd">Current Amendments (0/5)</p>
+          <p id="mw_od_amndlist"></p>
         </div>
 
         <div id="mw_housediv">
           <p id="mw_housediv_title">House of Representatives</p>
           <div id="mw_housediv_btns">
-            <button>1</button>
-            <button>2</button>
-            <button>3</button>
-            <button>4</button>
-            <button>5</button>
-            <button>6</button>
-            <button>7</button>
-            <button>8</button>
-            <button>9</button>
-            <button>10</button>
-            <button>11</button>
-            <button>12</button>
-            <button>13</button>
-            <button>14</button>
-            <button>15</button>
-            <button>16</button>
-            <button>17</button>
-            <button>18</button>
-            <button>19</button>
-            <button>20</button>
-            <button>21</button>
-            <button>22</button>
-            <button>23</button>
-            <button>24</button>
-            <button>25</button>
           </div>
         </div>
 
         <div id="mw_senatediv">
           <p id="mw_senatediv_title">The Senate</p>
           <div id="mw_senatediv_btns">
-            <button>1</button>
-            <button>2</button>
-            <button>3</button>
-            <button>4</button>
-            <button>5</button>
-            <button>6</button>
-            <button>7</button>
-            <button>8</button>
-            <button>9</button>
-            <button>10</button>
-            <button>11</button>
-            <button>12</button>
-            <button>13</button>
-            <button>14</button>
-            <button>15</button>
-            <button>16</button>
-            <button>17</button>
-            <button>18</button>
-            <button>19</button>
-            <button>20</button>
           </div>
         </div>
 
         <div id="mw_shopdiv">
           <div id="mw_sd_actioncards">
-            <div class="mw_sd_ac">
-              <p class="mw_sd_ac_title">Debug</p>
-              <p class="mw_sd_ac_desc">Does Debug Stuff</p>
-
-              <button class="mw_sd_ac_buy">Buy Card</button>
-            </div>
-            <div class="mw_sd_ac">
-              <p class="mw_sd_ac_title">Debug</p>
-              <p class="mw_sd_ac_desc">Does Debug Stuff</p>
-
-              <button class="mw_sd_ac_buy">Buy Card</button>
-            </div>
-            <div class="mw_sd_ac">
-              <p class="mw_sd_ac_title">Debug</p>
-              <p class="mw_sd_ac_desc">Does Debug Stuff</p>
-
-              <button class="mw_sd_ac_buy">Buy Card</button>
-            </div>
-            <div class="mw_sd_ac">
-              <p class="mw_sd_ac_title">Debug</p>
-              <p class="mw_sd_ac_desc">Does Debug Stuff</p>
-
-              <button class="mw_sd_ac_buy">Buy Card</button>
-            </div>
           </div>
 
           <div id="mw_sd_bills">
-            <div class="mw_sd_ac">
-              <p class="mw_sd_ac_title">Debug</p>
-              <p class="mw_sd_ac_desc">Does Debug Stuff</p>
-
-              <button class="mw_sd_ac_buy">Propose ($1)</button>
-            </div>
-            <div class="mw_sd_ac">
-              <p class="mw_sd_ac_title">Debug</p>
-              <p class="mw_sd_ac_desc">Does Debug Stuff</p>
-
-              <button class="mw_sd_ac_buy">Propose ($1)</button>
-            </div>
           </div>
         </div>
       </div>

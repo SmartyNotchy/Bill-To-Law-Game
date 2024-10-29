@@ -7,7 +7,32 @@ body {
 }
 
 .active {
-    outline: 2px solid blue;
+    outline: 2px solid #3366ff;
+}
+
+.activealt {
+    outline: 2px solid black;
+}
+
+hr {
+    width: 90%;
+}
+
+#mw_od_title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+#mw_od_desc {
+    font-size: 18px;
+}
+
+#mw_od_amnd {
+    font-size: 20px;
+}
+
+#mw_od_amndlist {
+    font-size: 16px;
 }
 
 /* LEFT SIDEBAR */ /* LEFT SIDEBAR */ /* LEFT SIDEBAR */ /* LEFT SIDEBAR */ /* LEFT SIDEBAR */ /* LEFT SIDEBAR */ /* LEFT SIDEBAR */
@@ -144,6 +169,10 @@ body {
 
     width: 100%;
     font-size: 14px;
+}
+
+#rs_od_desc {
+    font-style: italic;
 }
 
 /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */

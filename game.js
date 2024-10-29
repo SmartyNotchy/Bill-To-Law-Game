@@ -6,6 +6,8 @@ const LS_ROUND = document.getElementById("ls_info_roundnum");
 const LS_CASH = document.getElementById("ls_info_cash");
 const LS_APPROVAL = document.getElementById("ls_info_approval");
 
+const LS_NEXTROUND_BTN = document.getElementById("ls_nextround_btn");
+
 const BILLS_DIV = document.getElementById("bills_div");
 
 const ACTIONS_DIV = document.getElementById("actions_div");
@@ -15,6 +17,10 @@ const AD_DISCARD_BTN = document.getElementById("ad_discard");
 
 const MW_OVERVIEW_BTN = document.getElementById("mw_header_overview");
 const OVERVIEWDIV = document.getElementById("mw_overviewdiv");
+const MW_OD_TITLE = document.getElementById('mw_od_title');
+const MW_OD_DESC = document.getElementById('mw_od_desc');
+const MW_OD_AMND = document.getElementById('mw_od_amnd');
+const MW_OD_AMNDLIST = document.getElementById('mw_od_amndlist');
 
 const MW_HOUSE_BTN = document.getElementById("mw_header_house");
 const HOUSEDIV = document.getElementById("mw_housediv");
@@ -30,7 +36,26 @@ const SHOPDIV_AC = document.getElementById("mw_sd_actioncards");
 const SHOPDIV_BILLS = document.getElementById("mw_sd_bills");
 
 const RS_CONGRESSOVERVIEW_DIV = document.getElementById("rs_congressoverview_div");
+const RS_CO_HOUSE = document.getElementById("rs_co_house");
+const RS_CO_NAME = document.getElementById("rs_co_name");
+const RS_CO_SUPPORT = document.getElementById("rs_co_support");
+const RS_CO_VOTE = document.getElementById("rs_co_vote");
+
 const RS_CONGRESSMEMBER_DIV = document.getElementById("rs_congressmember_div");
+const RS_CM_NAME = document.getElementById('rs_cm_name');
+const RS_CM_ALIGNMENT = document.getElementById("rs_cm_alignment");
+const RS_CM_LINE = document.getElementById('rs_cm_vote');
+const RS_CM_VOTETEXT = document.getElementById("rs_cm_votetext");
+const RS_CM_VOTEBILL = document.getElementById("rs_cm_votebill");
+const RS_CM_INF = document.getElementById("rs_cm_inf");
+
+const RS_SHOP_DIV = document.getElementById('rs_shop_div');
+
+const RS_OVERVIEW_DIV = document.getElementById("rs_overview_div");
+const RS_OD_ALIGNMENT = document.getElementById("rs_od_alignment");
+const RS_OD_POPSUPPORT = document.getElementById("rs_od_popsupport");
+const RS_OD_REWARD = document.getElementById("rs_od_reward");
+const RS_OD_DESC = document.getElementById("rs_od_desc");
 
 
 /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */
@@ -49,10 +74,12 @@ class Game {
         this.publicApproval = 40;
 
         this.bills = [];
-        this.selectedBill = 0;
+        this.selectedBill = -1;
 
         this.actionCards = [];
         this.selectedActionCard = -1;
+        
+        this.selectedCongress = -1;
 
         this.selectedMW = MW_OVERVIEW;
 
@@ -113,6 +140,8 @@ class Game {
         LS_ROUND.innerText = `Round ${this.round}/30`;
         LS_CASH.innerText = `$${this.money}`;
         LS_APPROVAL.innerText = `Public Approval: ${this.publicApproval}%`;
+
+        LS_NEXTROUND_BTN.onclick = function() { GAME.nextRound(); }
     }
 
     renderBillsHeld() {
@@ -121,7 +150,11 @@ class Game {
         for (let bill of this.bills) {
             bill.menuBtn = bill.createMenuCardBtn(idx++);
             BILLS_DIV.appendChild(bill.menuBtn);
+            if (idx - 1 == this.selectedBill) {
+                bill.menuBtn.classList.add('active');
+            }
         }
+
     }
 
     renderActionCards() {
@@ -139,6 +172,9 @@ class Game {
             AD_USE_BTN.setAttribute("disabled", "");
             AD_DISCARD_BTN.setAttribute("disabled", "");
         }
+
+        AD_USE_BTN.onclick = function() { GAME.useActionCard(); }
+        AD_DISCARD_BTN.onclick = function() { GAME.discardActionCard(); }
     }
 
     renderMW() {
@@ -164,7 +200,43 @@ class Game {
     }
     
     renderOverview() {
+        function alignmentStr(alignment) {
+            if (alignment < -70) return "Far Left";
+            if (alignment < -40) return "Somehwat Left";
+            if (alignment < -10) return "Slight Left"
+            if (alignment < 10) return "Bipartisan"
+            if (alignnment < 40) return "Slight Right";
+            if (alignment < 70) return "Somewhat Right";
+            return "Far Right";
+        }
 
+        RS_SHOP_DIV.style.display = "none";
+        RS_CONGRESSOVERVIEW_DIV.style.display = "none";
+        RS_CONGRESSMEMBER_DIV.style.display = "none";
+        RS_OVERVIEW_DIV.style.display = "block";
+
+        if (this.selectedBill == -1) {
+            RS_OD_ALIGNMENT.innerText = "No Bill Selected!";
+            RS_OD_POPSUPPORT.innerText = "";
+            RS_OD_REWARD.innerText = "";
+            RS_OD_DESC.innerText = "";
+
+            MW_OD_TITLE.innerText = "Bill Overview - _____";
+            MW_OD_DESC.innerText = "No bill selected! You can propose new bills in the Shop menu.";
+            MW_OD_AMND.innerText = "Current Amendments (-/5)";
+            MW_OD_AMNDLIST.innerHTML = "";
+        } else {
+            let bill = this.bills[this.selectedBill];
+            RS_OD_ALIGNMENT.innerText = alignmentStr(bill.baseAlignment);
+            RS_OD_POPSUPPORT.innerText = `Popular Support: ${bill.basePopularSupport + bill.amndPopularSupport}%`;
+            RS_OD_REWARD.innerText = `Reward: $${bill.baseCashReward + bill.amndCashReward}`;
+            
+            RS_OD_DESC.innerText = bill.desc;
+
+            MW_OD_TITLE.innerText = `Bill Overview - ${bill.title}`;
+            MW_OD_DESC.innerHTML = bill.newChanges + bill.getDesc();
+            MW_OD_AMND.innerText = `Current Amendments (${bill.amendments.length}/5)`;
+        }
     }
 
     renderHouse() {
@@ -172,16 +244,95 @@ class Game {
             h.render(this);
         }
 
-        if (this.selectedBill != -1) {
+        if (this.selectedCongress == -1 || this.selectedCongress >= 25) {
+            for (let i = 0; i < 25; i++) {
+                this.house[i].button.classList.remove("activealt");
+            }
+            RS_CONGRESSMEMBER_DIV.style.display = "none";
+            RS_SHOP_DIV.style.display = "none";
+            RS_OVERVIEW_DIV.style.display = "none";
+            RS_CONGRESSOVERVIEW_DIV.style.display = "block";
 
+            RS_CO_HOUSE.innerText = "House of Representatives";
+            if (this.selectedBill == -1) {
+                RS_CO_NAME.innerText = "No bill selected"
+                RS_CO_SUPPORT.innerText = "";
+                RS_CO_VOTE.setAttribute("disabled", "");
+            } else {
+                let bill = this.bills[this.selectedBill];
+                RS_CO_NAME.innerText = bill.title;
+
+                if (bill.stage == IN_HOUSE || bill.stage == IN_HOUSE_VETO) {
+                    let support = 0;
+                    for (let i = 0; i < 25; i++) {
+                        if (this.house[i].calculateImpact(this)[0] > 0) support += 4;
+                    }
+                    RS_CO_SUPPORT.innerText = `Congressional Support: ${support}%`;
+                    RS_CO_VOTE.removeAttribute("disabled", "");
+                    RS_CO_VOTE.onclick = function() { GAME.bills[GAME.selectedBill].voteInHouse(GAME); }
+                } else {
+                    RS_CO_SUPPORT.innerText = "Not on the House floor";
+                    RS_CO_VOTE.setAttribute("disabled", "");
+                }
+            }
         } else {
+            for (let i = 0; i < 25; i++) {
+                if (i == this.selectedCongress) this.house[i].button.classList.add("activealt");
+                else this.house[i].button.classList.remove("activealt");
+            }
+            RS_SHOP_DIV.style.display = "none";
+            RS_CONGRESSOVERVIEW_DIV.style.display = "none";
+            RS_OVERVIEW_DIV.style.display = "none";
+            RS_CONGRESSMEMBER_DIV.style.display = "block";
 
+            let rep = this.house[this.selectedCongress];
+            rep.updateSidebar(this);
         }
     }
 
     renderSenate() {
         for (let s of this.senate) {
             s.render(this);
+        }
+
+        if (this.selectedCongress == -1 || this.selectedCongress < 25) {
+            for (let i = 0; i < 20; i++) {
+                this.senate[i].button.classList.remove("activealt");
+            }
+            RS_CONGRESSMEMBER_DIV.style.display = "none";
+            RS_SHOP_DIV.style.display = "none";
+            RS_OVERVIEW_DIV.style.display = "none";
+            RS_CONGRESSOVERVIEW_DIV.style.display = "block";
+
+            RS_CO_HOUSE.innerText = "The Senate";
+            if (this.selectedBill == -1) {
+                RS_CO_NAME.innerText = "No bill selected"
+                RS_CO_SUPPORT.innerText = "";
+                RS_CO_VOTE.setAttribute("disabled", "");
+            } else {
+                let bill = this.bills[this.selectedBill];
+                RS_CO_NAME.innerText = bill.title;
+
+                if (bill.stage == IN_SENATE || bill.stage == IN_SENATE_VETO) {
+                    RS_CO_SUPPORT.innerText = `Congressional Support: ${-1}%`; // todo fix
+                    RS_CO_VOTE.removeAttribute("disabled", "");
+                } else {
+                    RS_CO_SUPPORT.innerText = "Not on the Senate floor";
+                    RS_CO_VOTE.setAttribute("disabled", "");
+                }
+            }
+        } else {
+            for (let i = 0; i < 20; i++) {
+                if (i == this.selectedCongress - 25) this.senate[i].button.classList.add("activealt");
+                else this.senate[i].button.classList.remove("activealt");
+            }
+            RS_SHOP_DIV.style.display = "none";
+            RS_CONGRESSOVERVIEW_DIV.style.display = "none";
+            RS_OVERVIEW_DIV.style.display = "none";
+            RS_CONGRESSMEMBER_DIV.style.display = "block";
+
+            let senator = this.senate[this.selectedCongress-25];
+            senator.updateSidebar(this);
         }
     }
 
@@ -197,6 +348,12 @@ class Game {
         for (let b of this.shopBills) {
             SHOPDIV_BILLS.appendChild(new b().createShopCardBtn(idx++));
         }
+
+        
+        RS_CONGRESSOVERVIEW_DIV.style.display = "none";
+        RS_CONGRESSMEMBER_DIV.style.display = "none";
+        RS_OVERVIEW_DIV.style.display = "none";
+        RS_SHOP_DIV.style.display = "block";
     }
 
     selectBill(idx) {        
@@ -209,6 +366,7 @@ class Game {
             this.bills[this.selectedBill].menuBtn.classList.add("active");
         }
 
+        this.renderMW();
     }
 
     selectActionCard(idx) {
@@ -233,7 +391,9 @@ class Game {
     }
 
     discardActionCard() {
-
+        this.actionCards.splice(this.selectedActionCard, 1);
+        this.selectedActionCard = -1;
+        this.renderActionCards();
     }
 
     generateShop() {
@@ -272,11 +432,13 @@ class Game {
     }
 
     selectCongressMember(idx) {
-        if (idx >= 25) {
-            this.senate[idx-25].render(this)
+        if (this.selectedCongress == idx) {
+            this.selectedCongress = -1;
         } else {
-            this.house[idx].render(this)
+            this.selectedCongress = idx;
         }
+
+        this.renderMW();
     }
 
     nextRound() {
@@ -286,6 +448,13 @@ class Game {
         for (let bill of this.bills) {
             bill.roundTick();
         }
+
+        this.round += 1;
+        this.money += 5;
+        if (this.publicApproval < 80) this.money -= 1;
+        if (this.publicApproval < 60) this.money -= 1;
+        if (this.publicApproval < 40) this.money -= 1;
+        if (this.publicApproval < 20) this.money -= 1;
 
         this.generateShop();
         this.renderAll();
@@ -305,52 +474,108 @@ const IN_OFFICE = 5;
 const IN_HOUSE_VETO = 6;
 const IN_SENATE_VETO = 7;
 const IN_LAW = 8;
+const FAILED = 9;
 
 class Bill {
     constructor() {
-        this.title = "Debug Bill";
+        this.title = `H.R. ${(GAME.round * 100) + Math.floor(Math.random() * 90)}`;
         this.desc = "Bill of Debug Description";
-        this.committeeName = "Committee of Debug";
 
         this.alive = true;
-        this.stage = IN_PROPOSAL;
+        this.stage = IN_COMMITTEE;
         
         this.baseAlignment = 0; // -100 = far left, 100 = far right
         this.basePopularSupport = 50; // 0 = Very unpopular, 100 = Very popular
         this.baseCashReward = 10; // $
-        this.basePopReward = 5; // % gained for public approval
         this.baseScore = 100; 
 
         this.committeeApproval = null;
         this.roundsInCommittee = 0;
 
         this.amendments = [];
+        this.amendmentsAddedInSenate = 0;
         // Added on to base values (capped within ranges)
-        this.amdnPopularSupport = 0; // Directly affects
-        this.amdnCashReward = 0; 
-        this.amdnPopReward = 0; // % gained (or lost) for public approval
-
+        this.amndPopularSupport = 0; // Directly affects
+        this.amndCashReward = 0; 
+        
         this.actionCards = [];
         // Add specific action cards (i.e. party-line vote) here
 
         this.house = 0;
+
+        this.newChanges = "";
+    }
+
+    getDesc() {
+        if (this.stage == IN_COMMITTEE) return `Your bill is stuck in committee. It will be reported on in ${3-this.roundsInCommittee} rounds.`;
+        if (this.stage == IN_HOUSE) return `Your bill is being debated on the house floor.`;
+        if (this.stage == IN_SENATE) return `Your bill is being debated on the Senate floor.`;
+        if (this.stage == IN_CONFERENCE) return `Your bill is being resolved in a conference committee. It will be released next round.`;
+        if (this.stage == IN_OFFICE) return `Your bill is at the Oval Office, to be signed by the president!`;
+        if (this.stage == IN_HOUSE_VETO) return `Your bill was vetoed, and is being re-voted on in the House.`;
+        if (this.stage == IN_SENATE_VETO) return `Your bill was vetoed, and is being re-voted on in the Senate.`;
+        if (this.stage == IN_LAW) return `Your bill is now a law!`;
+        return "Your bill has failed. Time to start over...";
     }
 
     roundTick() {
+        if (this.stage == IN_COMMITTEE) {
+            this.roundsInCommittee += 1;
+            if (this.roundsInCommittee >= 3) {
+                this.stage = IN_HOUSE;
+            }
+        } else if (this.stage == IN_HOUSE) {
+
+        } else if (this.stage == IN_SENATE) {
+
+        } else if (this.stage == IN_CONFERENCE) {
+            this.stage = IN_OFFICE
+        } else if (this.stage == IN_OFFICE) {
+
+        } else if (this.stage == IN_HOUSE_VETO) {
+
+        } else if (this.stage == IN_SENATE_VETO) {
+
+        } else if (this.stage == IN_LAW) {
+
+        }
         // Random actions based on current bill position
         // Runs every "new round"
     }
 
-    propose() {
-        // Sends this bill to committee; run after selected
+    voteInHouse(game) {
+        let support = 0;
+        for (let i = 0; i < 25; i++) {
+            if (game.house[i].calculateImpact(game)[0] > 0) support += 4;
+        }
+
+        if (support >= 50) {
+            this.stage = IN_SENATE;
+            this.newChanges = "Congratulations! Your bill passed the House and is now in the Senate.<br>";
+        } else {
+            this.stage = FAILED;
+            this.newChanges = "Unfortunately, your bill failed to pass the House.<br>";
+        }
+
+        game.renderAll();
     }
 
-    sendToHouse() {
-        // Sends the bill to the House of Reps; run after committee approves in roundTick
-    }
+    voteInSenate(game) {
+        let support = 0;
+        for (let i = 0; i < 20; i++) {
+            if (game.senate[i].calculateImpact(game)[0] > 0) support += 5;
+        }
 
-    sendToSenate() {
-        // Sends the bill to the Senate; run after House votes on bill successfully
+        if (support >= 50) {
+            if (this.amendmentsAddedInSenate > 0) this.stage = IN_CONFERENCE;
+            else this.stage = IN_OFFICE;
+            this.newChanges = "Congratulations! Your bill passed the Senate.<br>";
+        } else {
+            this.stage = FAILED;
+            this.newChanges = "Unfortunately, your bill failed to pass the Senate.<br>";
+        }
+
+        game.renderAll();
     }
 
     sendToConference() {
@@ -362,7 +587,7 @@ class Bill {
     }
 
     sendToVetoHouse() {
-
+        
     }
 
     sendToVetoSenate() {
@@ -412,7 +637,7 @@ class Bill {
         btn.appendChild(document.createElement("br"));
 
         let btnStatus = document.createElement("p");
-        btnStatus.innerText = `${["Proposal", "In Committee", "House Floor", "Senate Floor", "Oval Office", "House Floor (Vetoed)", "Senate Floor (Vetoed)", "Law"][this.stage]}`;
+        btnStatus.innerText = `${["Proposal", "In Committee", "House Floor", "Senate Floor", "In Conference", "Oval Office", "House Floor (Vetoed)", "Senate Floor (Vetoed)", "Law", "Failed"][this.stage]}`;
         btnStatus.className = "bd_bill_status";
         btn.appendChild(btnStatus);
         btn.onclick = function() { GAME.selectBill(idx) };
@@ -478,29 +703,36 @@ class HouseMember {
         this.actionCards = [];
     }
 
+    calculateImpact(game) {
+        let bill = game.bills[game.selectedBill];
+
+        let alignmentImpact = 50 - Math.abs(bill.baseAlignment - this.alignment * 50);
+        alignmentImpact = Math.min(alignmentImpact, 50);
+        alignmentImpact = Math.max(alignmentImpact, -50);
+        alignmentImpact = Math.round(alignmentImpact);
+
+        let popularImpact = bill.basePopularSupport / 4;
+        popularImpact = Math.round(popularImpact);
+
+        let influences = [`${alignmentImpact}% - Political Alignment`, `${popularImpact}% - Popular Opinion`];
+        
+        let miscImp = this.calculateMiscImpact();
+
+        let netImpact = alignmentImpact + popularImpact + miscImp[0];
+        return [netImpact, influences.concat(miscImp[1])];
+    }
+
+    calculateMiscImpact(game) {
+        // TODO
+        return [0, []];
+    }
+
     render(game) {
         this.button.classList.remove("vote_no");
         this.button.classList.remove("vote_yes");
-        if (game.selectedBill != -1) {
-            let bill = game.bills[game.selectedBill];
-
-            let alignmentImpact = 10;
-            if (this.alignment > INDEPENDENT) {
-                alignmentImpact += 1.5 * (bill.baseAlignment) - 50 * this.alignment;
-            } else {
-                alignmentImpact += 50 * this.alignment - 1.5 * bill.baseAlignment;
-            }
-            alignmentImpact = Math.min(alignmentImpact, 50);
-            alignmentImpact = Math.max(alignmentImpact, -50);
-            alignmentImpact = Math.round(alignmentImpact);
-
-            let popularImpact = bill.basePopularSupport / 4;
-            popularImpact = Math.round(popularImpact);
-
-            // TODO AMENDMENTS & ACTION CARDS
-
-            let netImpact = alignmentImpact + popularImpact;
-            if (netImpact > 0) {
+        if (game.selectedBill != -1 && (game.bills[game.selectedBill].stage == IN_HOUSE || game.bills[game.selectedBill].stage == IN_HOUSE_VETO)) {
+            let imp = this.calculateImpact(game);
+            if (imp[0] > 0) {
                 this.button.classList.add("vote_yes");
             } else {
                 this.button.classList.add("vote_no");
@@ -509,33 +741,29 @@ class HouseMember {
     }
 
     updateSidebar(game) {
-        RS_CD_NAME.innerText = `Representative #${this.num}`;
-        RS_CD_ALIGNMENT.innerText = ["Far Left-Leaning", "Moderately Left-Leaning", "Independent", "Moderately Right-Leaning", "Far Right-Leaning"][this.alignment+2];
+        RS_CM_NAME.innerText = `Representative #${this.num}`;
+        RS_CM_ALIGNMENT.innerText = ["Far Left-Leaning", "Moderately Left-Leaning", "Independent", "Moderately Right-Leaning", "Far Right-Leaning"][this.alignment+2];
 
-        let bill = game.bills[game.selectedBill];
-
-        let alignmentImpact = 0;
-        if (this.alignment > INDEPENDENT) {
-            alignmentImpact += 1.5 * (bill.baseAlignment) - 50 * this.alignment;
+        if (game.selectedBill == -1) {
+            RS_CM_LINE.style.display = "none";
         } else {
-            alignmentImpact += 50 * this.alignment - 1.5 * bill.baseAlignment;
-        }
+            let imp = this.calculateImpact(game);
+            let bill = game.bills[game.selectedBill];
+            if (bill.stage == IN_HOUSE || bill.stage == IN_HOUSE_VETO) {
+                RS_CM_LINE.style.display = "block";
+                RS_CM_VOTETEXT.innerText = `${imp[0] > 0 ? "YES" : "NO"} (${imp[0]}%)`;
+                RS_CM_VOTEBILL.innerText = bill.title;
+                RS_CM_INF.innerHTML = imp[1].join("<br>");
+            } else {
+                RS_CM_LINE.style.display = "none";
+                let imp = this.calculateMiscImpact(game);
 
-        alignmentImpact = Math.min(alignmentImpact, 50);
-        alignmentImpact = Math.max(alignmentImpact, -50);
-        alignmentImpact = Math.round(alignmentImpact);
-
-        let popularImpact = bill.popSupport / 4;
-        popularImpact = Math.round(popularImpact);
-
-        // TODO AMENDMENTS & ACTION CARDS
-
-        let netImpact = alignmentImpact + popularImpact;
-
-        if (netImpact > 0) {
-
-        } else {
-
+                if (imp[1].length == 0) {
+                    RS_CM_INF.innerHTML = "None";
+                } else {
+                    RS_CM_INF.innerHTML = imp[1].join("<br>");
+                }
+            }
         }
     }
 }
@@ -553,12 +781,68 @@ class SenateMember {
         this.actionCards = [];
     }
 
-    render(game) {
+    calculateImpact(game) {
+        let bill = game.bills[game.selectedBill];
 
+        let alignmentImpact = 50 - Math.abs(bill.baseAlignment - this.alignment * 50);
+        alignmentImpact = Math.min(alignmentImpact, 50);
+        alignmentImpact = Math.max(alignmentImpact, -50);
+        alignmentImpact = Math.round(alignmentImpact);
+
+        let popularImpact = bill.basePopularSupport / 8;
+        popularImpact = Math.round(popularImpact);
+
+        let influences = [`${alignmentImpact}% - Political Alignment`, `${popularImpact} - Popular Opinion`];
+        
+        let miscImp = this.calculateMiscImpact();
+
+        let netImpact = alignmentImpact + popularImpact + miscImp[0];
+        return [netImpact, influences.concat(miscImp[1])];
+    }
+
+    calculateMiscImpact(game) {
+        // TODO
+        return [0, []];
+    }
+
+    render(game) {
+        this.button.classList.remove("vote_no");
+        this.button.classList.remove("vote_yes");
+        if (game.selectedBill != -1 && (game.bills[game.selectedBill].stage == IN_SENATE || game.bills[game.selectedBill].stage == IN_SENATE_VETO)) {
+            let imp = this.calculateImpact(game);
+            if (imp[0] > 0) {
+                this.button.classList.add("vote_yes");
+            } else {
+                this.button.classList.add("vote_no");
+            }
+        }
     }
 
     updateSidebar(game) {
-        // 
+        RS_CM_NAME.innerText = `Senator #${this.num}`;
+        RS_CM_ALIGNMENT.innerText = ["Far Left-Leaning", "Moderately Left-Leaning", "Independent", "Moderately Right-Leaning", "Far Right-Leaning"][this.alignment+2];
+
+        if (game.selectedBill == -1) {
+            RS_CM_LINE.style.display = "none";
+        } else {
+            let imp = this.calculateImpact(game);
+            let bill = game.bills[game.selectedBill];
+            if (bill.stage == IN_SENATE || bill.stage == IN_SENATE_VETO) {
+                RS_CM_LINE.style.display = "block";
+                RS_CM_VOTETEXT.innerText = `${imp[0] > 0 ? "YES" : "NO"} (${imp[0]}%)`;
+                RS_CM_VOTEBILL.innerText = bill.title;
+                RS_CM_INF.innerHTML = imp[1].join("<br>");
+            } else {
+                RS_CM_LINE.style.display = "none";
+                let imp = this.calculateMiscImpact(game);
+
+                if (imp[1].length == 0) {
+                    RS_CM_INF.innerHTML = "None";
+                } else {
+                    RS_CM_INF.innerHTML = imp[1].join("<br>");
+                }
+            }
+        }
     }
 }
 
