@@ -6,6 +6,10 @@ body {
     text-align: center;
 }
 
+.active {
+    outline: 2px solid blue;
+}
+
 /* LEFT SIDEBAR */ /* LEFT SIDEBAR */ /* LEFT SIDEBAR */ /* LEFT SIDEBAR */ /* LEFT SIDEBAR */ /* LEFT SIDEBAR */ /* LEFT SIDEBAR */
 
 #left_sidebar {
@@ -52,6 +56,32 @@ body {
 
     margin-top: 10px;
     margin-left: 10px;
+
+    position: relative;
+
+    border: 2px solid black;
+    border-radius: 10px;
+    background-color: white;
+}
+
+.bd_bill_title {
+    position: absolute;
+    margin-top: 0px;
+    top: 10px;
+    left: 0px;
+    width: 100%;
+    font-size: 24px;
+}
+
+.bd_bill_status {
+    position: absolute;
+    margin-top: 0px;
+    top: 120px;
+    left: 0px;
+
+    width: 100%;
+    font-size: 20px;
+    font-style: italic;
 }
 
 /* ACTION CARDS MENU */ /* ACTION CARDS MENU */ /* ACTION CARDS MENU */ /* ACTION CARDS MENU */ /* ACTION CARDS MENU */ /* ACTION CARDS MENU */
@@ -77,6 +107,43 @@ body {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
     gap: 10px;
+}
+
+#ad_cards {
+    display: flex;
+}
+
+.ad_card {
+    width: 150px;
+    height: calc(30vh - 2vw - 20px);
+
+    margin-top: 10px;
+    margin-left: 10px;
+
+    position: relative;
+
+    border: 2px solid black;
+    border-radius: 10px;
+    background-color: white;
+}
+
+.ad_card_title {
+    position: absolute;
+    margin-top: 0px;
+    top: 10px;
+    left: 0px;
+    width: 100%;
+    font-size: 20px;
+}
+
+.ad_card_desc {
+    position: absolute;
+    margin-top: 0px;
+    top: 80px;
+    left: 0px;
+
+    width: 100%;
+    font-size: 14px;
 }
 
 /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */ /* RIGHT SIDEBAR */
@@ -185,4 +252,56 @@ body {
 
 .vote_no {
     background-color: #ffdddd !important;
+}
+
+/* ACTION CARD SHOP IDEK KILL ME NOW */
+
+#mw_sd_actioncards {
+    margin-top: 30px;
+
+    width: 100%;
+    
+    display: flex;
+    justify-content: center;
+
+    gap: 10px;
+}
+
+#mw_sd_bills {
+    margin-top: 10px;
+
+    width: 100%;
+    
+    display: flex;
+    justify-content: center;
+
+    gap: 10px;
+}
+
+.mw_sd_ac {
+    width: 150px;
+    height: calc(30vh - 2vw - 20px);
+
+    border: 2px solid black;
+    border-radius: 10px;
+
+    position: relative;
+}
+
+.mw_sd_ac_title {
+    font-size: 20px;
+    margin-top: 10px;
+}
+
+.mw_sd_ac_desc {
+    font-size: 14px;
+}
+
+.mw_sd_ac_buy {
+    width: 130px;
+    height: 30px;
+
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
 }

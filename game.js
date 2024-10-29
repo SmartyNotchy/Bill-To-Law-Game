@@ -8,6 +8,11 @@ const LS_APPROVAL = document.getElementById("ls_info_approval");
 
 const BILLS_DIV = document.getElementById("bills_div");
 
+const ACTIONS_DIV = document.getElementById("actions_div");
+const AD_CARDS = document.getElementById("ad_cards");
+const AD_USE_BTN = document.getElementById("ad_use");
+const AD_DISCARD_BTN = document.getElementById("ad_discard");
+
 const MW_OVERVIEW_BTN = document.getElementById("mw_header_overview");
 const OVERVIEWDIV = document.getElementById("mw_overviewdiv");
 
@@ -21,9 +26,10 @@ const SENATEDIV_GRID = document.getElementById("mw_senatediv_btns");
 
 const MW_SHOP_BTN = document.getElementById("mw_header_shop");
 const SHOPDIV = document.getElementById("mw_shopdiv");
+const SHOPDIV_AC = document.getElementById("mw_sd_actioncards");
+const SHOPDIV_BILLS = document.getElementById("mw_sd_bills");
 
 const RS_CONGRESSOVERVIEW_DIV = document.getElementById("rs_congressoverview_div");
-
 const RS_CONGRESSMEMBER_DIV = document.getElementById("rs_congressmember_div");
 
 
@@ -42,7 +48,7 @@ class Game {
         this.money = 6;
         this.publicApproval = 40;
 
-        this.bills = [new Bill(0, 0, 0, 0, 0)];
+        this.bills = [];
         this.selectedBill = 0;
 
         this.actionCards = [];
@@ -52,6 +58,7 @@ class Game {
 
         this.buildHouse();
         this.buildSenate();
+        this.generateShop();
 
 
         // Initial Render
@@ -112,14 +119,26 @@ class Game {
         BILLS_DIV.innerHTML = "";
         let idx = 0;
         for (let bill of this.bills) {
-            let btn = bill.createMenuCardBtn();
-            btn.onclick = function() { GAME.selectBill(idx++) };
-            BILLS_DIV.appendChild(btn);
+            bill.menuBtn = bill.createMenuCardBtn(idx++);
+            BILLS_DIV.appendChild(bill.menuBtn);
         }
     }
 
     renderActionCards() {
-        
+        AD_CARDS.innerHTML = "";
+        let idx = 0;
+        for (let ac of this.actionCards) {
+            ac.menuBtn = ac.createMenuCardBtn(idx++);
+            AD_CARDS.appendChild(ac.menuBtn);
+        }
+
+        if (this.selectedActionCard != -1) {
+            AD_USE_BTN.removeAttribute("disabled");
+            AD_DISCARD_BTN.removeAttribute("disabled");
+        } else {
+            AD_USE_BTN.setAttribute("disabled", "");
+            AD_DISCARD_BTN.setAttribute("disabled", "");
+        }
     }
 
     renderMW() {
@@ -167,23 +186,84 @@ class Game {
     }
 
     renderShop() {
+        SHOPDIV_AC.innerHTML = "";
+        let idx = 0;
+        for (let ac of this.shopActions) {
+            SHOPDIV_AC.appendChild(new ac().createShopCardBtn(idx++));
+        }
 
+        SHOPDIV_BILLS.innerHTML = "";
+        idx = 4;
+        for (let b of this.shopBills) {
+            SHOPDIV_BILLS.appendChild(new b().createShopCardBtn(idx++));
+        }
     }
 
-    selectBill(idx) {
-        // re-render
+    selectBill(idx) {        
+        if (this.selectedBill == idx) {
+            this.bills[idx].menuBtn.classList.remove("active");
+            this.selectedBill = -1;
+        } else {
+            if (this.selectedBill != -1) this.bills[this.selectedBill].menuBtn.classList.remove("active");
+            this.selectedBill = idx
+            this.bills[this.selectedBill].menuBtn.classList.add("active");
+        }
+
     }
 
     selectActionCard(idx) {
-        // re-render
+        if (this.selectedActionCard == idx) {
+            this.actionCards[idx].menuBtn.classList.remove("active");
+            this.selectedActionCard = -1;
+            
+            AD_USE_BTN.setAttribute("disabled", "");
+            AD_DISCARD_BTN.setAttribute("disabled", "");
+        } else {
+            if (this.selectedActionCard != -1) this.actionCards[this.selectedActionCard].menuBtn.classList.remove("active");
+            this.selectedActionCard = idx;
+            this.actionCards[idx].menuBtn.classList.add("active");
+
+            AD_USE_BTN.removeAttribute("disabled");
+            AD_DISCARD_BTN.removeAttribute("disabled");
+        }
     }
 
     useActionCard() {
-
+        
     }
 
     discardActionCard() {
 
+    }
+
+    generateShop() {
+        this.shopActions = ACTION_CARDS.sort(() => 0.5 - Math.random()).slice(0, 4);
+        this.shopBills = BILLS.sort(() => 0.5 - Math.random()).slice(0, 2);
+    }
+
+    buyShopItem(idx) {
+        if (idx < 4) {
+            let ac = new this.shopActions[idx]();
+            if (ac.price > this.money) alert("Not enough money!");
+            else if (this.actionCards.length >= 3) alert("You can only hold 3 action cards at a time! Use or discard one to free up space.");
+            else {
+                this.shopActions[idx] = BoughtActionCard;
+                this.money -= ac.price;
+                this.actionCards.push(ac);
+            }
+        } else {
+            idx -= 4;
+            let b = new this.shopBills[idx]();
+            if (this.money < 1) alert("Not enough money!");
+            else if (this.bills.length >= 3) alert("You can only have 3 active bills at a time!");
+            else {
+                this.shopBills[idx] = BoughtBill;
+                this.money--;
+                this.bills.push(b);
+            }
+        }
+
+        this.renderAll();
     }
 
     selectMW(mw) {
@@ -200,15 +280,15 @@ class Game {
     }
 
     nextRound() {
+        this.selectedBill = -1;
+        this.selectMW(MW_OVERVIEW);
+
         for (let bill of this.bills) {
             bill.roundTick();
         }
 
-        renderBillsHeld();
-        renderActionCards();
-
-        this.selectedBill = -1;
-        renderBillOverview();
+        this.generateShop();
+        this.renderAll();
     }
 }
 
@@ -227,7 +307,7 @@ const IN_SENATE_VETO = 7;
 const IN_LAW = 8;
 
 class Bill {
-    constructor(alignment, popSupport, cReward, pReward, score) {
+    constructor() {
         this.title = "Debug Bill";
         this.desc = "Bill of Debug Description";
         this.committeeName = "Committee of Debug";
@@ -236,10 +316,10 @@ class Bill {
         this.stage = IN_PROPOSAL;
         
         this.baseAlignment = 0; // -100 = far left, 100 = far right
-        this.basePopularSupport = popSupport; // 0 = Very unpopular, 100 = Very popular
-        this.baseCashReward = cReward; // $
-        this.basePopReward = pReward; // % gained for public approval
-        this.baseScore = score; 
+        this.basePopularSupport = 50; // 0 = Very unpopular, 100 = Very popular
+        this.baseCashReward = 10; // $
+        this.basePopReward = 5; // % gained for public approval
+        this.baseScore = 100; 
 
         this.committeeApproval = null;
         this.roundsInCommittee = 0;
@@ -297,11 +377,30 @@ class Bill {
 
     }
 
-    createProposalCardBtn() {
-        // Creates a div that displays the bill in the "select proposal" menu.
+    createShopCardBtn(idx) {
+        let div = document.createElement("div");
+        div.className = "mw_sd_ac";
+
+        let p1 = document.createElement("p");
+        p1.className = "mw_sd_ac_title";
+        p1.innerText = this.title;
+        div.appendChild(p1);
+
+        let p2 = document.createElement("p");
+        p2.className = "mw_sd_ac_desc";
+        p2.innerText = this.desc;
+        div.appendChild(p2);
+
+        let btn = document.createElement("button");
+        btn.onclick = function() { GAME.buyShopItem(idx) };
+        btn.className = "mw_sd_ac_buy";
+        btn.innerText = `Propose Bill ($1)`;
+        div.appendChild(btn);
+
+        return div;
     }
 
-    createMenuCardBtn() {
+    createMenuCardBtn(idx) {
         // Creates a div that displays the bill in the "bills" holder.
         let btn = document.createElement("button");
         btn.className = "bd_bill";
@@ -316,14 +415,46 @@ class Bill {
         btnStatus.innerText = `${["Proposal", "In Committee", "House Floor", "Senate Floor", "Oval Office", "House Floor (Vetoed)", "Senate Floor (Vetoed)", "Law"][this.stage]}`;
         btnStatus.className = "bd_bill_status";
         btn.appendChild(btnStatus);
+        btn.onclick = function() { GAME.selectBill(idx) };
 
         return btn;
     }
+}
 
-    renderRightSidebar() {
-        // If nothing is selected, render the right sidebar
+class BoughtBill extends Bill {
+    constructor() {
+        super();
+
+        this.title = "Bought!";
+        this.desc = "";
+    }
+
+    createShopCardBtn(idx) {
+        let div = document.createElement("div");
+        div.className = "mw_sd_ac";
+
+        let p1 = document.createElement("p");
+        p1.className = "mw_sd_ac_title";
+        p1.innerText = this.title;
+        div.appendChild(p1);
+
+        let p2 = document.createElement("p");
+        p2.className = "mw_sd_ac_desc";
+        p2.innerText = this.desc;
+        div.appendChild(p2);
+
+        let btn = document.createElement("button");
+        btn.onclick = function() { GAME.buyShopItem(idx) };
+        btn.className = "mw_sd_ac_buy";
+        btn.innerText = `Already Proposed!`;
+        btn.setAttribute("disabled", "");
+        div.appendChild(btn);
+
+        return div;
     }
 }
+
+var BILLS = [Bill, Bill, Bill, Bill];
 
 /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */
 /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */
@@ -439,7 +570,14 @@ class SenateMember {
 
 class ActionCard {
     constructor() {
+        this.name = "Debug Action Card";
+        this.desc = "Does nothing; debug.";
+        this.price = 1;
 
+        this.border = "#000000";
+        this.bg = "#ffffff";
+
+        this.menuBtn = null;
     }
 
     isUsable(game) {
@@ -450,14 +588,85 @@ class ActionCard {
 
     }
 
-    createShopCardBtn() {
+    createShopCardBtn(idx) {
+        let div = document.createElement("div");
+        div.className = "mw_sd_ac";
 
+        let p1 = document.createElement("p");
+        p1.className = "mw_sd_ac_title";
+        p1.innerText = this.name;
+        div.appendChild(p1);
+
+        let p2 = document.createElement("p");
+        p2.className = "mw_sd_ac_desc";
+        p2.innerText = this.desc;
+        div.appendChild(p2);
+
+        let btn = document.createElement("button");
+        btn.onclick = function() { GAME.buyShopItem(idx) };
+        btn.className = "mw_sd_ac_buy";
+        btn.innerText = `Buy Card ($${this.price})`;
+        div.appendChild(btn);
+
+        return div;
     }
 
-    createMenuCardBtn() {
+    createMenuCardBtn(idx) {
+        let btn = document.createElement("button");
+        btn.className = "ad_card";
 
+        let p1 = document.createElement("p");
+        p1.innerText = this.name;
+        p1.className = "ad_card_title";
+
+        let p2 = document.createElement("p");
+        p2.innerText = this.desc;
+        p2.className = "ad_card_desc";
+
+        btn.appendChild(p1);
+        btn.appendChild(p2);
+        btn.onclick = function() { GAME.selectActionCard(idx) };
+        return btn;
     }
 }
+
+class BoughtActionCard extends ActionCard {
+    constructor() {
+        super();
+
+        this.name = "Bought!";
+        this.desc = "";
+
+        this.border = "#000000";
+        this.bg = "#ffffff";
+    }
+
+    createShopCardBtn(idx) {
+        let div = document.createElement("div");
+        div.className = "mw_sd_ac";
+
+        let p1 = document.createElement("p");
+        p1.className = "mw_sd_ac_title";
+        p1.innerText = this.name;
+        div.appendChild(p1);
+
+        let p2 = document.createElement("p");
+        p2.className = "mw_sd_ac_desc";
+        p2.innerText = this.desc;
+        div.appendChild(p2);
+
+        let btn = document.createElement("button");
+        btn.onclick = function() { GAME.buyShopItem(idx) };
+        btn.className = "mw_sd_ac_buy";
+        btn.innerText = `Already Bought!`;
+        btn.setAttribute("disabled", "");
+        div.appendChild(btn);
+
+        return div;
+    }
+}
+
+var ACTION_CARDS = [ActionCard, ActionCard, ActionCard, ActionCard];
 
 /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */
 /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */
