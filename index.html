@@ -24,40 +24,71 @@
         <div id="ls_info_div">
           <p id="ls_info_roundnum">Round 1/30</p>
           <p id="ls_info_cash">$0</p>
-          <p id="ls_info_support">Public Approval: x%</p>
+          <p id="ls_info_approval">Public Approval: x%</p>
         </div>
 
         <button id="ls_help_btn">Help</button>
       </div>
 
       <div id="bills_div">
+        <!-- 
         <button id="bd_bill0" class="bd_bill">
           H.R. 1
           <br>
-          <button></button>
-        </button>
+          <p id="bd_bill0_desc" class="bd_billdesc">In Committee</p>
+        </button> -->
       </div>
 
       <div id="actions_div">
-        
+        <div id="ad_btns">
+          <button id="ad_use">Use</button>
+          <button id="ad_discard">Discard</button>
+        </div>
       </div>
 
       <div id="right_sidebar">
-        <div id="rs_info_div">
-          Info
+        <div id="rs_congressoverview_div">
+          <p id="rs_co_house">House of Representatives</p>
+
+          <hr>
+          <p id="rs_cm_name">Bill Overview</p>
+          <p id="rs_cm_name">Support: </p>
+          <hr>
+
+          <button id="rs_cm_vote">Hold Vote on Bill</button>
         </div>
+
+
+        <div id="rs_congressmember_div">
+          <p id="rs_cm_house">House of Representatives</p>
+          
+          <hr>
+          <p id="rs_cm_name">Representative #25</p>
+          <p id="rs_cm_alignment">Moderately Left-Leaning</p>
+          <hr>
+
+          <p id="rs_cm_vote">Will vote <span id="rs_cm_votetext">NO (-5%)</span> on <span id="rs_cm_votebill">H.R. 1</span></p>
+          <br>
+          <p id="rs_cm_inftitle">Voting Influences:</p>
+
+          <div id="rs_cm_infdiv">
+
+          </div>
+        </div>
+
+
       </div>
 
       <div id="main_window">
         <div id="mw_header">
-          <button id="mw_header_shop">Action Card Shop</button>
           <button id="mw_header_overview">Bill Overview</button>
           <button id="mw_header_house">House</button>
           <button id="mw_header_senate">Senate</button>
+          <button id="mw_header_shop">Shop</button>
         </div>
-
+      
         <div id="mw_overviewdiv">
-          <p>TODO BILL STUFF</p>
+          TODO: OVERVIEW
         </div>
 
         <div id="mw_housediv">
@@ -115,6 +146,10 @@
             <button>19</button>
             <button>20</button>
           </div>
+        </div>
+
+        <div id="mw_shopdiv">
+          TODO: SHOP
         </div>
       </div>
 
