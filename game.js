@@ -238,7 +238,13 @@ class Game {
             let bill = this.bills[this.selectedBill];
             RS_OD_ALIGNMENT.innerText = alignmentStr(bill.baseAlignment);
             RS_OD_POPSUPPORT.innerText = `Popular Support: ${bill.basePopularSupport}%`;
-            RS_OD_REWARD.innerText = `Reward: $${bill.baseCashReward + bill.amndCashReward}`;
+
+            let cash = bill.baseCashReward;
+            for (let amnd of bill.amendments) {
+                cash += amnd.cash;
+            }
+
+            RS_OD_REWARD.innerText = `Reward: $${cash}`;
             
             RS_OD_DESC.innerText = bill.desc;
 
@@ -411,7 +417,7 @@ class Game {
                 for (let amnd of bill.amendments) {
                     cash += amnd.cash;
                 }
-                let popSupport = (bill.basePopularSupport > 75 ? 12 : 8);
+                let popSupport = (bill.basePopularSupport > 75 ? 20 : 16);
                 this.money += cash;
                 popSupport = Math.min(popSupport, 100 - this.publicApproval);
                 this.publicApproval += popSupport;
@@ -514,7 +520,7 @@ class Game {
         if (this.publicApproval < 60) this.money -= 1;
         if (this.publicApproval < 40) this.money -= 1;
         if (this.publicApproval < 20) this.money -= 1;
-        this.publicApproval -= 4;
+        this.publicApproval -= 3;
         this.publicApproval = Math.max(this.publicApproval, 0);
 
         alert(`You earned $${this.money - old} from fundraisers & donations!`);
@@ -757,9 +763,9 @@ class Amendment {
     getImpact(member) {
         if (this.type == 0) {
             if (this.alignment <= 0 && member.alignment <= 0) {
-                return Math.round((80 - Math.abs(this.alignment - member.alignment * 40))/4);
+                return Math.round((80 - Math.abs(this.alignment - member.alignment * 40))/3.25);
             } else if (this.alignment >= 0 && member.alignment >= 0) {
-                return Math.round((80 - Math.abs(this.alignment - member.alignment * 40))/4);
+                return Math.round((80 - Math.abs(this.alignment - member.alignment * 40))/3.25);
             } else {
                 return -15;
             }

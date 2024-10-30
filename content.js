@@ -28,10 +28,20 @@ class PorkBarrelAmendmentAC extends ActionCard {
 
         this.name = "Pork-Barrel Amendment";
         this.desc = "Earn more money if passed into law, but hurts chances in Congress.";
-        this.price = 3;
+        this.price = 1;
 
         this.color = "#6600cc";
         this.bg = "#ffccff";
+    }
+
+    isUsable(game) {
+        return game.selectedBill != -1 && game.bills[game.selectedBill].stage == IN_SENATE && game.bills[game.selectedBill].amendments.length < 5;
+    }
+
+    use(game) {
+        game.bills[game.selectedBill].amendments.push(new Amendment("Personal Pork-barrel", 1, 0, 20, 0));
+        if (game.bills[game.selectedBill].stage == IN_SENATE) game.bills[game.selectedBill].amendmentsAddedInSenate++;
+        alert("Your amendment was added to the bill!");
     }
 }
 
@@ -223,7 +233,7 @@ class PetitionAC extends ActionCard {
 }
 
 
-ACTION_CARDS = [DischargePetitionAC, CommitteeHearingAC, AdCampaignAC, GermaneAmendmentLeft, GermaneAmendmentRight, NongermaneAmendmentLeft, NongermaneAmendmentRight, PetitionAC];
+ACTION_CARDS = [DischargePetitionAC, CommitteeHearingAC, AdCampaignAC, GermaneAmendmentLeft, GermaneAmendmentRight, NongermaneAmendmentLeft, NongermaneAmendmentRight, PorkBarrelAmendmentAC, PetitionAC];
 
 
 /* BILLS */
