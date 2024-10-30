@@ -156,7 +156,7 @@ class AdCampaignAC extends ActionCard {
 
         this.name = "Ad Campaign"; 
         this.desc = "Increase public support for a bill. More effective in the House.";
-        this.price = 1;
+        this.price = 2;
 
         this.color = "#006699";
         this.bg = "#ccffff";
@@ -180,7 +180,7 @@ class CommitteeHearingAC extends ActionCard {
 
         this.name = "Committee Hearing";
         this.desc = "Use while a bill is in committee to greatly increase public support.";
-        this.price = 1;
+        this.price = 4;
 
         this.color = "#996633";
         this.bg = "#eedece";
@@ -217,7 +217,7 @@ class PetitionAC extends ActionCard {
 
         this.name = "Presidential Petition"; 
         this.desc = "Ensures that the president will sign in this bill once in the Oval Office";
-        this.price = 1;
+        this.price = 3;
 
         this.color = "#003300";
         this.bg = "#ccffcc";
