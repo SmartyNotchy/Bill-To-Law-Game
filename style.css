@@ -119,6 +119,17 @@ hr {
     border-radius: 5px;
 }
 
+#mw_header button {
+    width: 150px;
+    height: 30px;
+    border: 1px solid black;
+    border-radius: 5px;
+
+    
+    margin: 5px;
+    margin-top: 10px;
+}
+
 /* BILLS HELD MENU */ /* BILLS HELD MENU */ /* BILLS HELD MENU */ /* BILLS HELD MENU */ /* BILLS HELD MENU */ /* BILLS HELD MENU */ /* BILLS HELD MENU */
 
 #bills_div {
@@ -375,12 +386,16 @@ hr {
 }
 
 .mw_sd_ac_title {
-    font-size: 20px;
+    font-size: 16px;
     margin-top: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
 .mw_sd_ac_desc {
-    font-size: 14px;
+    font-size: 12px;
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
 .mw_sd_ac_buy {

@@ -72,7 +72,7 @@ class Game {
     constructor() {
         this.round = 1;
         this.money = 6;
-        this.publicApproval = 40;
+        this.publicApproval = 60;
 
         this.bills = [];
         this.selectedBill = -1;
@@ -91,6 +91,11 @@ class Game {
 
         // Initial Render
         this.renderAll();
+
+        this.billsPassed = 0;
+        this.billsProposed = 0;
+        this.cardsUsed = 0;
+        this.amendmentsAdded = 0;
     }
 
     buildHouse() {
@@ -102,9 +107,9 @@ class Game {
             btn.onclick = function() { GAME.selectCongressMember(i); };
 
             let alignment = FAR_LEFT;
-            if (i < 8) alignment = FAR_LEFT;
-            else if (i < 11) alignment = MID_LEFT;
-            else if (i < 14) alignment = INDEPENDENT;
+            if (i < 10) alignment = FAR_LEFT;
+            else if (i < 13) alignment = MID_LEFT;
+            else if (i < 15) alignment = INDEPENDENT;
             else if (i < 17) alignment = MID_RIGHT;
             else alignment = FAR_RIGHT;
 
@@ -121,8 +126,8 @@ class Game {
             btn.onclick = function() { GAME.selectCongressMember(i+25); };
 
             let alignment = FAR_LEFT;
-            if (i < 8) alignment = FAR_LEFT;
-            else if (i < 10) alignment = MID_LEFT;
+            if (i < 6) alignment = FAR_LEFT;
+            else if (i < 8) alignment = MID_LEFT;
             else if (i < 12) alignment = MID_RIGHT;
             else alignment = FAR_RIGHT;
 
@@ -205,12 +210,10 @@ class Game {
     
     renderOverview() {
         function alignmentStr(alignment) {
-            if (alignment < -70) return "Far Left";
-            if (alignment < -40) return "Somehwat Left";
-            if (alignment < -10) return "Slight Left"
-            if (alignment < 10) return "Bipartisan"
-            if (alignment < 40) return "Slight Right";
-            if (alignment < 70) return "Somewhat Right";
+            if (alignment < -40) return "Far Left";
+            if (alignment < 0) return "Somewhat Left";
+            if (alignment == 0) return "Bipartisan"
+            if (alignment <= 40) return "Somewhat Right";
             return "Far Right";
         }
 
@@ -242,6 +245,14 @@ class Game {
             MW_OD_TITLE.innerText = `Bill Overview - ${bill.title}`;
             MW_OD_DESC.innerHTML = bill.getDesc();
             MW_OD_AMND.innerText = `Current Amendments (${bill.amendments.length}/5)`;
+
+            let amnds = [];
+            let idx = 1;
+            for (let amnd of bill.amendments) {
+                amnds.push(`Amendment #${idx++} - ${amnd.text}`);
+            }
+
+            MW_OD_AMNDLIST.innerHTML = amnds.join("<br>");
 
             RS_OD_DISCARD.style.display = "block";
             if (bill.stage == FAILED) RS_OD_DISCARD.innerText = "Discard Bill Card";
@@ -394,7 +405,23 @@ class Game {
             this.bills.splice(this.selectedBill, 1);
             this.selectedBill = -1;
 
-            // TODO GRANT REWARDS
+            if (bill.stage == IN_LAW) {
+                this.billsPassed += 1;
+                let cash = bill.baseCashReward;
+                for (let amnd of bill.amendments) {
+                    cash += amnd.cash;
+                }
+                let popSupport = (bill.basePopularSupport > 75 ? 12 : 8);
+                this.money += cash;
+                popSupport = Math.min(popSupport, 100 - this.publicApproval);
+                this.publicApproval += popSupport;
+                if (popSupport == 0) {
+                    alert(`You earned $${cash} from passing this bill!`);
+                } else {
+                    alert(`You earned $${cash} from passing this bill and gained ${popSupport}% more public approval!`);
+                }
+                
+            }
             this.renderAll();
         }
     }
@@ -450,6 +477,7 @@ class Game {
             if (this.money < 1) alert("Not enough money!");
             else if (this.bills.length >= 3) alert("You can only have 3 active bills at a time!");
             else {
+                this.billsProposed++;
                 this.shopBills[idx] = BoughtBill;
                 this.money--;
                 this.bills.push(b);
@@ -480,12 +508,32 @@ class Game {
         }
 
         this.round += 1;
+        let old = this.money;
         this.money += 5;
         if (this.publicApproval < 80) this.money -= 1;
         if (this.publicApproval < 60) this.money -= 1;
         if (this.publicApproval < 40) this.money -= 1;
         if (this.publicApproval < 20) this.money -= 1;
+        this.publicApproval -= 4;
+        this.publicApproval = Math.max(this.publicApproval, 0);
 
+        alert(`You earned $${this.money - old} from fundraisers & donations!`);
+
+        if (this.round >= 30) {
+            let res = prompt(
+`Your term in Congress has ended! Your final results:
+
+Bills Passed: ${this.billsPassed}
+Bills Proposed: ${this.billsProposed}
+
+Final Public Approval: ${this.publicApproval}%
+Re-elected? ${this.publicApproval >= 50 ? "Yes!" : "No..." }
+
+Enter your name to save to the leaderboards.
+(After entering your name, a fresh new game will begin! Once a politician, always a politician...)
+`);
+            location.reload();
+        }
         this.generateShop();
         this.renderAll();
     }
@@ -510,6 +558,8 @@ class Bill {
     constructor() {
         this.title = `H.R. ${(GAME.round * 100) + Math.floor(Math.random() * 90)}`;
         this.desc = "Bill of Debug Description";
+        this.color = "#000000";
+        this.bg = "#ffffff";
 
         this.alive = true;
         this.stage = IN_COMMITTEE;
@@ -519,23 +569,17 @@ class Bill {
         this.baseCashReward = 10; // $
         this.baseScore = 100; 
 
-        this.committeeApproval = null;
         this.roundsInCommittee = 0;
 
         this.amendments = [];
         this.amendmentsAddedInSenate = 0;
-        this.amndCashReward = 0; 
-        
-        this.actionCards = [];
-        // Add specific action cards (i.e. party-line vote) here
+        this.amndCashReward = 0;
 
         this.house = 0;
-
-        this.newChanges = "";
     }
 
     getDesc() {
-        if (this.stage == IN_COMMITTEE) return `Your bill is stuck in committee. It will be reported on in ${3-this.roundsInCommittee} rounds.`;
+        if (this.stage == IN_COMMITTEE) return `Your bill is stuck in committee. It will be reported on in ${3-this.roundsInCommittee} round(s).`;
         if (this.stage == IN_HOUSE) return `Your bill is being debated on the house floor.`;
         if (this.stage == IN_SENATE) return `Your bill is being debated on the Senate floor.`;
         if (this.stage == IN_CONFERENCE) return `Your bill is being resolved in a conference committee. It will be released next round.`;
@@ -550,6 +594,7 @@ class Bill {
         if (this.stage == IN_COMMITTEE) {
             this.roundsInCommittee += 1;
             if (this.roundsInCommittee >= 3) {
+                alert(`Your bill ${this.title} was reported out by the committee, and is now on the house floor!`);
                 this.stage = IN_HOUSE;
             }
         } else if (this.stage == IN_HOUSE) {
@@ -557,9 +602,11 @@ class Bill {
         } else if (this.stage == IN_SENATE) {
 
         } else if (this.stage == IN_CONFERENCE) {
-            this.stage = IN_OFFICE
+            alert(`Your bill ${this.title} was fixed by the conference committee and is now on the president's desk!`);
+            this.stage = IN_OFFICE;
         } else if (this.stage == IN_OFFICE) {
-
+            alert(`Luckily, your bill ${this.title} was signed by the president into law! Congratulations!`);
+            this.stage = IN_LAW;
         } else if (this.stage == IN_HOUSE_VETO) {
 
         } else if (this.stage == IN_SENATE_VETO) {
@@ -597,48 +644,32 @@ class Bill {
         }
 
         if (support >= 50) {
-            if (this.amendmentsAddedInSenate > 0) this.stage = IN_CONFERENCE;
-            else this.stage = IN_OFFICE;
-            this.newChanges = "Congratulations! Your bill passed the Senate.<br>";
+            if (this.amendmentsAddedInSenate > 0) {
+                this.stage = IN_CONFERENCE;
+                alert(`Congratulations! Your bill passed the Senate with ${support}% of votes and is now being resolved in a conference committee.`);
+            } else {
+                this.stage = IN_OFFICE;
+                alert(`Congratulations! Your bill passed the Senate with ${support}% of votes and is now on the President's desk!`);
+            }
         } else {
             this.stage = FAILED;
+            alert(`Unfortunately, your bill failed to pass the Senate, as it only got ${support}% of votes.`);
             this.newChanges = "Unfortunately, your bill failed to pass the Senate.<br>";
         }
 
         game.renderAll();
     }
 
-    sendToConference() {
-        // Sends the bill to the Conference Committee; run if Senate vote has differences from House vote
-    }
-
-    sendToOffice() {
-
-    }
-
-    sendToVetoHouse() {
-        
-    }
-
-    sendToVetoSenate() {
-
-    }
-
-    putInLaw() {
-
-    }
-
-    kill() {
-
-    }
-
     createShopCardBtn(idx) {
         let div = document.createElement("div");
         div.className = "mw_sd_ac";
+        div.style.border = `2px solid ${this.color}`;
+        div.style.color = `${this.color}`;
+        div.style.backgroundColor = `${this.bg}`;
 
         let p1 = document.createElement("p");
         p1.className = "mw_sd_ac_title";
-        p1.innerText = this.title;
+        p1.innerText = "Bill Proposal";
         div.appendChild(p1);
 
         let p2 = document.createElement("p");
@@ -659,6 +690,9 @@ class Bill {
         // Creates a div that displays the bill in the "bills" holder.
         let btn = document.createElement("button");
         btn.className = "bd_bill";
+        btn.style.border = `2px solid ${this.color}`;
+        btn.style.color = `${this.color}`;
+        btn.style.backgroundColor = `${this.bg}`;
 
         let btnTitle = document.createElement("p");
         btnTitle.innerText = `${this.title}`;
@@ -687,6 +721,7 @@ class BoughtBill extends Bill {
     createShopCardBtn(idx) {
         let div = document.createElement("div");
         div.className = "mw_sd_ac";
+        div.style.border = "2px solid lightgray";
 
         let p1 = document.createElement("p");
         p1.className = "mw_sd_ac_title";
@@ -710,9 +745,35 @@ class BoughtBill extends Bill {
 }
 
 class Amendment {
-    
+    constructor(text, type, alignment, cash, specific) {
+        this.text = text;
+        this.type = type;
+        this.alignment = alignment;
+        this.cash = cash;
+
+        this.specific = specific;
+    }
+
+    getImpact(member) {
+        if (this.type == 0) {
+            if (this.alignment <= 0 && member.alignment <= 0) {
+                return Math.round((80 - Math.abs(this.alignment - member.alignment * 40))/4);
+            } else if (this.alignment >= 0 && member.alignment >= 0) {
+                return Math.round((80 - Math.abs(this.alignment - member.alignment * 40))/4);
+            } else {
+                return -15;
+            }
+        } else if (this.type == 1) {
+            return -10;
+        } else if (this.type == 2) {
+            if (member.rawNum == this.specific) {
+                return 100;
+            }
+        }
+    }
 }
-var BILLS = [Bill, Bill, Bill, Bill];
+
+var BILLS = [];
 
 /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */
 /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */
@@ -727,6 +788,7 @@ const FAR_RIGHT = 2;
 class HouseMember {
     constructor(num, alignment, htmlBtn) {
         this.num = num;
+        this.rawNum = num;
         this.alignment = alignment;
         this.button = htmlBtn;
 
@@ -739,25 +801,39 @@ class HouseMember {
     calculateImpact(game) {
         let bill = game.bills[game.selectedBill];
 
-        let alignmentImpact = 50 - Math.abs(bill.baseAlignment - this.alignment * 50);
-        alignmentImpact = Math.min(alignmentImpact, 50);
-        alignmentImpact = Math.max(alignmentImpact, -50);
-        alignmentImpact = Math.round(alignmentImpact / 1.5);
+        let alignmentImpact = 0;
+        if (this.alignment <= 0 && bill.baseAlignment <= 0) {
+            alignmentImpact = 80 - Math.abs(this.alignment * 40 - bill.baseAlignment);
+        } else if (this.alignment >= 0 && bill.baseAlignment >= 0) {
+            alignmentImpact = 80 - Math.abs(this.alignment * 40 - bill.baseAlignment);
+        } else {
+            alignmentImpact = -40;
+        }
 
-        let popularImpact = Math.max(bill.basePopularSupport - 50, 0);
+        alignmentImpact = Math.round(alignmentImpact);
+
+        let popularImpact = bill.basePopularSupport - 50;
         popularImpact = Math.round(popularImpact);
 
         let influences = [`${alignmentImpact}% - Political Alignment`, `${popularImpact}% - Popular Opinion`];
         
-        let miscImp = this.calculateMiscImpact();
+        let miscImp = this.calculateMiscImpact(game);
 
         let netImpact = alignmentImpact + popularImpact + miscImp[0];
         return [netImpact, influences.concat(miscImp[1])];
     }
 
     calculateMiscImpact(game) {
-        // TODO
-        return [0, []];
+        let bill = game.bills[game.selectedBill];
+        let idx = 1;
+        let res = 0;
+        let infs = [];
+        for (let amnd of bill.amendments) {
+            let imp = amnd.getImpact(this);
+            res += imp;
+            infs.push(`${imp}% - Amendment #${idx++}`);
+        }
+        return [res, infs];
     }
 
     render(game) {
@@ -805,6 +881,7 @@ class HouseMember {
 class SenateMember {
     constructor(num, alignment, htmlBtn) {
         this.num = num;
+        this.rawNum = num + 25;
         this.alignment = alignment;
         this.button = htmlBtn;
 
@@ -817,25 +894,39 @@ class SenateMember {
     calculateImpact(game) {
         let bill = game.bills[game.selectedBill];
 
-        let alignmentImpact = 50 - Math.abs(bill.baseAlignment - this.alignment * 50);
-        alignmentImpact = Math.min(alignmentImpact, 50);
-        alignmentImpact = Math.max(alignmentImpact, -50);
-        alignmentImpact = Math.round(alignmentImpact / 1.5);
+        let alignmentImpact = 0;
+        if (this.alignment <= 0 && bill.baseAlignment <= 0) {
+            alignmentImpact = 80 - Math.abs(this.alignment * 40 - bill.baseAlignment);
+        } else if (this.alignment >= 0 && bill.baseAlignment >= 0) {
+            alignmentImpact = 80 - Math.abs(this.alignment * 40 - bill.baseAlignment);
+        } else {
+            alignmentImpact = -40;
+        }
 
-        let popularImpact = Math.max((bill.basePopularSupport - 60) / 2, 0);
+        alignmentImpact = Math.round(alignmentImpact);
+
+        let popularImpact = (bill.basePopularSupport - 60) / 2;
         popularImpact = Math.round(popularImpact);
 
         let influences = [`${alignmentImpact}% - Political Alignment`, `${popularImpact}% - Popular Opinion`];
         
-        let miscImp = this.calculateMiscImpact();
+        let miscImp = this.calculateMiscImpact(game);
 
         let netImpact = alignmentImpact + popularImpact + miscImp[0];
         return [netImpact, influences.concat(miscImp[1])];
     }
 
     calculateMiscImpact(game) {
-        // TODO
-        return [0, []];
+        let bill = game.bills[game.selectedBill];
+        let idx = 1;
+        let res = 0;
+        let infs = [];
+        for (let amnd of bill.amendments) {
+            let imp = amnd.getImpact(this);
+            res += imp;
+            infs.push(`${imp}% - Amendment #${idx++}`);
+        }
+        return [res, infs];
     }
 
     render(game) {
@@ -891,9 +982,9 @@ class ActionCard {
         this.desc = "Does nothing; debug.";
         this.price = 1;
 
-        this.border = "#000000";
-        this.bg = "#ffffff";
         this.color = "#000000";
+        this.bg = "#ffffff";
+        
 
         this.menuBtn = null;
     }
@@ -909,6 +1000,9 @@ class ActionCard {
     createShopCardBtn(idx) {
         let div = document.createElement("div");
         div.className = "mw_sd_ac";
+        div.style.color = this.color;
+        div.style.border = `2px solid ${this.color}`;
+        div.style.backgroundColor = this.bg;
 
         let p1 = document.createElement("p");
         p1.className = "mw_sd_ac_title";
@@ -932,6 +1026,9 @@ class ActionCard {
     createMenuCardBtn(idx) {
         let btn = document.createElement("button");
         btn.className = "ad_card";
+        btn.style.color = this.color;
+        btn.style.border = `2px solid ${this.color}`;
+        btn.style.backgroundColor = this.bg;
 
         let p1 = document.createElement("p");
         p1.innerText = this.name;
@@ -962,6 +1059,7 @@ class BoughtActionCard extends ActionCard {
     createShopCardBtn(idx) {
         let div = document.createElement("div");
         div.className = "mw_sd_ac";
+        div.style.border = "2px solid lightgray";
 
         let p1 = document.createElement("p");
         p1.className = "mw_sd_ac_title";
