@@ -46,6 +46,11 @@ hr {
     position: absolute;
     top: 2vw;
     left: 2vw;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 #ls_info_div {
@@ -53,13 +58,65 @@ hr {
     height: 30vh;
 
     background-color: white;
-    border: 5px solid black;
+    border: 3px solid black;
     border-radius: 20px;
 
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+#ls_info_roundnum {
+    font-size: 24px;
+}
+
+#ls_info_cash {
+    font-size: 20px;
+    color: green;
+    font-weight: bold;
+
+    margin-top: 20px;
+}
+
+#ls_info_approval {
+    font-size: 18px;
+    color: #3366ff;
+    font-weight: bold;
+    margin-top: -10px;
+}
+
+#ls_nextround_btn {
+    width: 15vw;
+    height: 5vh;
+
+    margin-top: 20px;
+
+    border: none;
+    border-radius: 5px;
+}
+
+#rs_co_vote {
+    position: absolute;
+    width: 17vw;
+    height: 5vh;
+    bottom: 2vw;
+    left: 2vw;
+
+    border: none;
+    border-radius: 5px;
+
+}
+
+#rs_od_discard {
+    position: absolute;
+    width: 17vw;
+    height: 5vh;
+    bottom: 2vw;
+    left: 2vw;
+
+    border: none;
+    border-radius: 5px;
 }
 
 /* BILLS HELD MENU */ /* BILLS HELD MENU */ /* BILLS HELD MENU */ /* BILLS HELD MENU */ /* BILLS HELD MENU */ /* BILLS HELD MENU */ /* BILLS HELD MENU */
@@ -165,9 +222,9 @@ hr {
     position: absolute;
     margin-top: 0px;
     top: 80px;
-    left: 0px;
+    left: 10px;
 
-    width: 100%;
+    width: calc(100% - 20px);
     font-size: 14px;
 }
 

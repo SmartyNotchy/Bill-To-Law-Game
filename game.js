@@ -56,6 +56,7 @@ const RS_OD_ALIGNMENT = document.getElementById("rs_od_alignment");
 const RS_OD_POPSUPPORT = document.getElementById("rs_od_popsupport");
 const RS_OD_REWARD = document.getElementById("rs_od_reward");
 const RS_OD_DESC = document.getElementById("rs_od_desc");
+const RS_OD_DISCARD = document.getElementById("rs_od_discard");
 
 
 /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */ /* PLAYER */
@@ -138,7 +139,7 @@ class Game {
 
     renderLeftSidebar() {
         LS_ROUND.innerText = `Round ${this.round}/30`;
-        LS_CASH.innerText = `$${this.money}`;
+        LS_CASH.innerText = `Money: $${this.money}`;
         LS_APPROVAL.innerText = `Public Approval: ${this.publicApproval}%`;
 
         LS_NEXTROUND_BTN.onclick = function() { GAME.nextRound(); }
@@ -154,7 +155,6 @@ class Game {
                 bill.menuBtn.classList.add('active');
             }
         }
-
     }
 
     renderActionCards() {
@@ -163,10 +163,14 @@ class Game {
         for (let ac of this.actionCards) {
             ac.menuBtn = ac.createMenuCardBtn(idx++);
             AD_CARDS.appendChild(ac.menuBtn);
+            if (idx - 1 == this.selectedActionCard) {
+                ac.menuBtn.classList.add('active');
+            }
         }
 
         if (this.selectedActionCard != -1) {
-            AD_USE_BTN.removeAttribute("disabled");
+            if (this.actionCards[this.selectedActionCard].isUsable(this)) AD_USE_BTN.removeAttribute("disabled");
+            else AD_USE_BTN.setAttribute("disabled", "");
             AD_DISCARD_BTN.removeAttribute("disabled");
         } else {
             AD_USE_BTN.setAttribute("disabled", "");
@@ -205,7 +209,7 @@ class Game {
             if (alignment < -40) return "Somehwat Left";
             if (alignment < -10) return "Slight Left"
             if (alignment < 10) return "Bipartisan"
-            if (alignnment < 40) return "Slight Right";
+            if (alignment < 40) return "Slight Right";
             if (alignment < 70) return "Somewhat Right";
             return "Far Right";
         }
@@ -221,6 +225,8 @@ class Game {
             RS_OD_REWARD.innerText = "";
             RS_OD_DESC.innerText = "";
 
+            RS_OD_DISCARD.style.display = "none";
+
             MW_OD_TITLE.innerText = "Bill Overview - _____";
             MW_OD_DESC.innerText = "No bill selected! You can propose new bills in the Shop menu.";
             MW_OD_AMND.innerText = "Current Amendments (-/5)";
@@ -228,14 +234,21 @@ class Game {
         } else {
             let bill = this.bills[this.selectedBill];
             RS_OD_ALIGNMENT.innerText = alignmentStr(bill.baseAlignment);
-            RS_OD_POPSUPPORT.innerText = `Popular Support: ${bill.basePopularSupport + bill.amndPopularSupport}%`;
+            RS_OD_POPSUPPORT.innerText = `Popular Support: ${bill.basePopularSupport}%`;
             RS_OD_REWARD.innerText = `Reward: $${bill.baseCashReward + bill.amndCashReward}`;
             
             RS_OD_DESC.innerText = bill.desc;
 
             MW_OD_TITLE.innerText = `Bill Overview - ${bill.title}`;
-            MW_OD_DESC.innerHTML = bill.newChanges + bill.getDesc();
+            MW_OD_DESC.innerHTML = bill.getDesc();
             MW_OD_AMND.innerText = `Current Amendments (${bill.amendments.length}/5)`;
+
+            RS_OD_DISCARD.style.display = "block";
+            if (bill.stage == FAILED) RS_OD_DISCARD.innerText = "Discard Bill Card";
+            else if (bill.stage == IN_LAW) RS_OD_DISCARD.innerText = "Claim Rewards";
+            else RS_OD_DISCARD.innerText = "Discard this Bill";
+
+            RS_OD_DISCARD.onclick = function() { GAME.discardBill(); };
         }
     }
 
@@ -314,7 +327,13 @@ class Game {
                 RS_CO_NAME.innerText = bill.title;
 
                 if (bill.stage == IN_SENATE || bill.stage == IN_SENATE_VETO) {
-                    RS_CO_SUPPORT.innerText = `Congressional Support: ${-1}%`; // todo fix
+                    let support = 0;
+                    for (let i = 0; i < 20; i++) {
+                        if (this.senate[i].calculateImpact(this)[0] > 0) support += 5;
+                    }
+
+                    RS_CO_SUPPORT.innerText = `Congressional Support: ${support}%`; // todo fix
+                    RS_CO_VOTE.onclick = function() { GAME.bills[GAME.selectedBill].voteInSenate(GAME); }
                     RS_CO_VOTE.removeAttribute("disabled", "");
                 } else {
                     RS_CO_SUPPORT.innerText = "Not on the Senate floor";
@@ -366,7 +385,18 @@ class Game {
             this.bills[this.selectedBill].menuBtn.classList.add("active");
         }
 
-        this.renderMW();
+        this.renderAll();
+    }
+
+    discardBill() {
+        if (this.selectedBill != -1) {
+            let bill = this.bills[this.selectedBill];
+            this.bills.splice(this.selectedBill, 1);
+            this.selectedBill = -1;
+
+            // TODO GRANT REWARDS
+            this.renderAll();
+        }
     }
 
     selectActionCard(idx) {
@@ -381,19 +411,22 @@ class Game {
             this.selectedActionCard = idx;
             this.actionCards[idx].menuBtn.classList.add("active");
 
-            AD_USE_BTN.removeAttribute("disabled");
+            if (this.actionCards[idx].isUsable(this)) AD_USE_BTN.removeAttribute("disabled");
+            else AD_USE_BTN.setAttribute("disabled", "");
             AD_DISCARD_BTN.removeAttribute("disabled");
         }
     }
 
     useActionCard() {
-        
+        this.actionCards[this.selectedActionCard].use(this);
+        this.discardActionCard();
+        this.renderAll();
     }
 
     discardActionCard() {
         this.actionCards.splice(this.selectedActionCard, 1);
         this.selectedActionCard = -1;
-        this.renderActionCards();
+        this.renderAll();
     }
 
     generateShop() {
@@ -428,7 +461,7 @@ class Game {
 
     selectMW(mw) {
         this.selectedMW = mw;
-        this.renderMW();
+        this.renderAll();
     }
 
     selectCongressMember(idx) {
@@ -438,13 +471,10 @@ class Game {
             this.selectedCongress = idx;
         }
 
-        this.renderMW();
+        this.renderAll();
     }
 
     nextRound() {
-        this.selectedBill = -1;
-        this.selectMW(MW_OVERVIEW);
-
         for (let bill of this.bills) {
             bill.roundTick();
         }
@@ -494,8 +524,6 @@ class Bill {
 
         this.amendments = [];
         this.amendmentsAddedInSenate = 0;
-        // Added on to base values (capped within ranges)
-        this.amndPopularSupport = 0; // Directly affects
         this.amndCashReward = 0; 
         
         this.actionCards = [];
@@ -551,10 +579,12 @@ class Bill {
 
         if (support >= 50) {
             this.stage = IN_SENATE;
-            this.newChanges = "Congratulations! Your bill passed the House and is now in the Senate.<br>";
+            alert(`Congratulations! Your bill passed the House with ${support}% of votes and is now on the Senate floor.`);
+            this.newChanges = `Congratulations! Your bill passed the House with ${support}% of votes and is now on the Senate floor.<br>`;
         } else {
             this.stage = FAILED;
-            this.newChanges = "Unfortunately, your bill failed to pass the House.<br>";
+            alert(`Unfortunately, your bill failed to pass the House, as it only got ${support}% of votes.`);
+            this.newChanges = `Unfortunately, your bill failed to pass the House, as it only got ${support}% of votes.<br>`;
         }
 
         game.renderAll();
@@ -679,6 +709,9 @@ class BoughtBill extends Bill {
     }
 }
 
+class Amendment {
+    
+}
 var BILLS = [Bill, Bill, Bill, Bill];
 
 /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */ /* HOUSE & SENATE */
@@ -709,9 +742,9 @@ class HouseMember {
         let alignmentImpact = 50 - Math.abs(bill.baseAlignment - this.alignment * 50);
         alignmentImpact = Math.min(alignmentImpact, 50);
         alignmentImpact = Math.max(alignmentImpact, -50);
-        alignmentImpact = Math.round(alignmentImpact);
+        alignmentImpact = Math.round(alignmentImpact / 1.5);
 
-        let popularImpact = bill.basePopularSupport / 4;
+        let popularImpact = Math.max(bill.basePopularSupport - 50, 0);
         popularImpact = Math.round(popularImpact);
 
         let influences = [`${alignmentImpact}% - Political Alignment`, `${popularImpact}% - Popular Opinion`];
@@ -787,12 +820,12 @@ class SenateMember {
         let alignmentImpact = 50 - Math.abs(bill.baseAlignment - this.alignment * 50);
         alignmentImpact = Math.min(alignmentImpact, 50);
         alignmentImpact = Math.max(alignmentImpact, -50);
-        alignmentImpact = Math.round(alignmentImpact);
+        alignmentImpact = Math.round(alignmentImpact / 1.5);
 
-        let popularImpact = bill.basePopularSupport / 8;
+        let popularImpact = Math.max((bill.basePopularSupport - 60) / 2, 0);
         popularImpact = Math.round(popularImpact);
 
-        let influences = [`${alignmentImpact}% - Political Alignment`, `${popularImpact} - Popular Opinion`];
+        let influences = [`${alignmentImpact}% - Political Alignment`, `${popularImpact}% - Popular Opinion`];
         
         let miscImp = this.calculateMiscImpact();
 
@@ -860,12 +893,13 @@ class ActionCard {
 
         this.border = "#000000";
         this.bg = "#ffffff";
+        this.color = "#000000";
 
         this.menuBtn = null;
     }
 
     isUsable(game) {
-
+        return false;
     }
 
     use(game) {
@@ -950,10 +984,4 @@ class BoughtActionCard extends ActionCard {
     }
 }
 
-var ACTION_CARDS = [ActionCard, ActionCard, ActionCard, ActionCard];
-
-/* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */
-/* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */
-/* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */ /* MAINLOOP */
-
-var GAME = new Game();
+var ACTION_CARDS = []; // Defined in content.js
